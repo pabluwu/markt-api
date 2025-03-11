@@ -20,9 +20,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from markt.views.token import ValidateTokenView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Obtener token
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refrescar token
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('api/', include('markt.urls')), 
+    path('api/admin/', admin.site.urls),
+    path('api/api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Obtener token
+    path('api/api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refrescar token
+    path('api/api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('api/api/', include('markt.urls')), 
 ]

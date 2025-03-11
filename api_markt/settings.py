@@ -32,7 +32,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['148.113.197.145', 'localhost']
 
 
 # Application definition
@@ -100,8 +100,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'markt',  # Nombre de la base de datos
-        'USER': 'root',               # Usuario de MySQL
-        'PASSWORD': '',        # Contraseña de MySQL
+        'USER': 'markt',               # Usuario de MySQL
+        'PASSWORD': '%740_GYs/X)7',        # Contraseña de MySQL
         'HOST': 'localhost',                   # Host de la base de datos (usualmente 'localhost')
         'PORT': '3306',                        # Puerto de MySQL (por defecto es 3306)
     }
@@ -155,3 +155,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
