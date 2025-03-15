@@ -31,8 +31,12 @@ SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
+if env.bool('SERVER', default = False):
+    hosts = ['148.113.197.145', 'localhost']
+else:
+    hosts = ['localhost', '127.0.0.1']
 
-ALLOWED_HOSTS = ['148.113.197.145', 'localhost']
+ALLOWED_HOSTS = hosts
 
 
 # Application definition
@@ -99,9 +103,9 @@ WSGI_APPLICATION = 'api_markt.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'markt',  # Nombre de la base de datos
-        'USER': 'markt',               # Usuario de MySQL
-        'PASSWORD': '%740_GYs/X)7',        # Contraseña de MySQL
+        'NAME': env('BDNAME'),  # Nombre de la base de datos
+        'USER': env('USER'),               # Usuario de MySQL
+        'PASSWORD': env('PASS'),        # Contraseña de MySQL
         'HOST': 'localhost',                   # Host de la base de datos (usualmente 'localhost')
         'PORT': '3306',                        # Puerto de MySQL (por defecto es 3306)
     }
