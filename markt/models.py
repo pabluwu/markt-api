@@ -28,3 +28,15 @@ class Post(models.Model):
 
     def __str__(self):
         return f"Post by {self.author}"
+    
+class Seguimiento(models.Model):
+    seguidor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="siguiendo") #Usuario que sigue
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) #Tipo de obj al que va a seguir, empresa o usuario.
+    object_id = models.PositiveIntegerField() 
+    seguido = GenericForeignKey('content_type', 'object_id')
+    fecha_seguimiento = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ('seguidor', 'content_type', 'object_id')  # Un usuario no puede seguir dos veces lo mismo
+
+    def __str__(self):
+        return f"{self.seguidor} sigue a {self.seguido}"
