@@ -71,7 +71,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Token de acceso vence en 10 minutos
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Token de acceso vence en 10 minutos
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Token de refresco vence en 1 día
     'ROTATE_REFRESH_TOKENS': False,                   # No rotar el token de refresco
     'BLACKLIST_AFTER_ROTATION': False,                # No poner en lista negra el token después de rotarlo

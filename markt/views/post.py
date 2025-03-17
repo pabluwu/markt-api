@@ -47,3 +47,28 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(PostCreateSerializer(post).data, status=status.HTTP_201_CREATED)
         
         
+    @action(detail=True, methods=['get'], url_path='empresa')
+    def posts_by_empresa(self, request, pk=None):
+        """Obtiene los posts de una empresa según su ID."""
+        empresa = Empresa.objects.filter(id=pk).first()
+        
+        if not empresa:
+            return Response({"error": "Empresa no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(Empresa), author_id=empresa.id)
+        serializer = PostReadSerializer(posts, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='user')
+    def posts_by_user(self, request, pk=None):
+        """Obtiene los posts de un usuario según su ID."""
+        user = User.objects.filter(id=pk).first()
+        
+        if not user:
+            return Response({"error": "User no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(User), author_id=user.id)
+        serializer = PostReadSerializer(posts, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
