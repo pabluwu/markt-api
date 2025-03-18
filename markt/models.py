@@ -3,6 +3,16 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    segundo_apellido = models.CharField(max_length=255, blank=True, null=True)
+    rut = models.CharField(max_length=9, unique=True, blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+    profesion = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
 class Empresa(models.Model):
     rut = models.CharField(max_length=12, unique=True)  # Ejemplo: "12.345.678-9"
     nombre_empresa = models.CharField(max_length=50)

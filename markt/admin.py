@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Empresa, Perfil, Post
+from .models import Empresa, Perfil, Post, UserProfile
 
 
 @admin.register(Empresa)
@@ -16,3 +16,7 @@ class PerfilAdmin(admin.ModelAdmin):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ('content', 'author_id')
+    
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user','rut')
