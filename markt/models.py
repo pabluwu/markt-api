@@ -10,6 +10,7 @@ class UserProfile(models.Model):
     rut = models.CharField(max_length=9, unique=True, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     profesion = models.CharField(max_length=255, blank=True, null=True)
+    sobre_mi = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -50,3 +51,18 @@ class Seguimiento(models.Model):
 
     def __str__(self):
         return f"{self.seguidor} sigue a {self.seguido}"
+    
+class Like(models.Model):
+    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="likes")  # Post al que se da like
+
+    liker_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)  # Puede ser Usuario o Empresa
+    liker_id = models.PositiveIntegerField()  # ID del Usuario o Empresa
+    liker = GenericForeignKey("liker_type", "liker_id")  # Enlace genérico
+
+    created_at = models.DateTimeField(auto_now_add=True)  # Fecha del like
+
+    class Meta:
+        unique_together = ("post", "liker_type", "liker_id")  # Un usuario/empresa no puede dar like dos veces
+
+    def __str__(self):
+        return f"{self.liker} dio like a {self.post}"
