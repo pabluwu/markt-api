@@ -5,6 +5,8 @@ from .views.perfil import PerfilViewSet
 from .views.post import PostViewSet
 from .views.like import LikeViewSet
 from .views.seguimiento import SeguimientoViewSet
+from .views.comment import CommentViewSet
+from .views.servicio import ServicioViewSet
 
 router = DefaultRouter()
 router.register(r'usuario', UsuarioViewSet, basename='usuario')
@@ -13,5 +15,7 @@ router.register(r'perfil', PerfilViewSet, basename='perfil')
 router.register(r'post', PostViewSet, basename='post')
 router.register(r'like', LikeViewSet, basename='like')
 router.register(r'seguir', SeguimientoViewSet, basename='seguimiento')
+router.register(r'comments', CommentViewSet, basename='comment')
+router.register(r'servicios', ServicioViewSet)
 
 urlpatterns = router.urls

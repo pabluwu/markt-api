@@ -73,6 +73,12 @@ class UsuarioViewSet(ViewSet):
             except ValueError:
                 return Response({"error": "Formato de fecha inválido. Usa YYYY-MM-DD o ISO 8601."},
                                 status=status.HTTP_400_BAD_REQUEST)
+                
+        print(request.FILES)
+        if 'imagen_perfil[0]' in request.FILES:
+            print('si hay imagen')
+            userprofile.imagen_perfil = request.FILES['imagen_perfil[0]']
+            
         userprofile.save()
 
         serializer = UserSerializer(user)

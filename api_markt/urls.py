@@ -15,9 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.conf import settings
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from markt.views.token import ValidateTokenView
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),
@@ -25,4 +27,4 @@ urlpatterns = [
     path('api/api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refrescar token
     path('api/api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/api/', include('markt.urls')), 
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
