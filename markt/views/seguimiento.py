@@ -3,7 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..models import Seguimiento
+from ..models import Seguimiento, Empresa
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -139,16 +139,31 @@ class SeguimientoViewSet(viewsets.ViewSet):
         result = []
         for seg in seguimientos:
             seguido_obj = seg.seguido  # Obtener el objeto seguido
+            print(seg.seguido)
 
             # Determinar el nombre y username (si existen)
             name = getattr(seguido_obj, "name", None) or getattr(seguido_obj, "nombre_fantasia", None) or str(seguido_obj)
             username = getattr(seguido_obj, "username", None)
+            
+            if isinstance(seguido_obj, User):  # Si es un usuario
+                imagen_perfil = getattr(seguido_obj.userprofile, "imagen_perfil", None)
+                if imagen_perfil:
+                    imagen_perfil = imagen_perfil.url
+                else: 
+                    imagen_perfil = None
+            elif isinstance(seguido_obj, Empresa):  # Si es una empresa
+                imagen_perfil = getattr(seguido_obj, "imagen_perfil", None)
+                if imagen_perfil:
+                    imagen_perfil = imagen_perfil.url  # Devolver la URL de la imagen
+            else:
+                imagen_perfil = None  # Si no es ni un usuario ni una empresa, no tiene imagen
 
             result.append({
                 "id": seg.seguido_object_id,
                 "type": seg.seguido_content_type.model,
                 "name": name,
-                "username": username  # Puede ser None si no existe
+                "username": username,  # Puede ser None si no existe
+                "imagen_perfil": imagen_perfil,  # Agregar la imagen de perfil
             })
 
         return Response(result, status=status.HTTP_200_OK)

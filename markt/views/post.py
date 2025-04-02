@@ -55,7 +55,7 @@ class PostViewSet(viewsets.ModelViewSet):
         if not empresa:
             return Response({"error": "Empresa no encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
-        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(Empresa), author_id=empresa.id)
+        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(Empresa), author_id=empresa.id).order_by('-created_at')
         serializer = PostReadSerializer(posts, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -68,7 +68,7 @@ class PostViewSet(viewsets.ModelViewSet):
         if not user:
             return Response({"error": "User no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
-        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(User), author_id=user.id)
+        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(User), author_id=user.id).order_by('-created_at')
         serializer = PostReadSerializer(posts, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)

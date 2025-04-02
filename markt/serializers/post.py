@@ -12,7 +12,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 class EmpresaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Empresa
-        fields = ['id', 'nombre_fantasia'] 
+        fields = ['id', 'nombre_fantasia', 'imagen_perfil'] 
 
 class PostCreateSerializer(serializers.ModelSerializer):
     

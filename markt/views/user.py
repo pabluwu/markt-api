@@ -75,9 +75,9 @@ class UsuarioViewSet(ViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
                 
         print(request.FILES)
-        if 'imagen_perfil[0]' in request.FILES:
+        if 'imagen_perfil' in request.FILES:
             print('si hay imagen')
-            userprofile.imagen_perfil = request.FILES['imagen_perfil[0]']
+            userprofile.imagen_perfil = request.FILES['imagen_perfil']
             
         userprofile.save()
 
