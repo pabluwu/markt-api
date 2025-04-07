@@ -183,3 +183,25 @@ class ArchivoAdjunto(models.Model):
 
     def __str__(self):
         return self.archivo.name
+    
+class Conexion(models.Model):
+    # Seguidor genérico (puede ser un usuario, empresa, etc.)
+    seguidor_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="conexiones_realizados", default=1)
+    seguidor_object_id = models.PositiveIntegerField(default=1)
+    seguidor = GenericForeignKey('seguidor_content_type', 'seguidor_object_id')
+
+    # Seguido genérico (puede ser un usuario, empresa, etc.)
+    seguido_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="conexiones", default=1)
+    seguido_object_id = models.PositiveIntegerField(default=1)
+    seguido = GenericForeignKey('seguido_content_type', 'seguido_object_id')
+
+    fecha_seguimiento = models.DateTimeField(auto_now_add=True)
+    
+    estado = models.PositiveIntegerField(default=0)
+    detalle_conexion = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        unique_together = ('seguidor_content_type', 'seguidor_object_id', 'seguido_content_type', 'seguido_object_id')
+
+    def __str__(self):
+        return f"{self.seguidor} conectó con {self.seguido}"

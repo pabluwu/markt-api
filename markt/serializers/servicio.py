@@ -26,7 +26,7 @@ class ServicioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Servicio
-        fields = ['descripcion', 'tiempo_entrega', 'modalidades_atencion', 'formas_pago', 'certificaciones', 'productos', 'empresa']
+        fields = ['descripcion', 'tiempo_entrega', 'modalidades_atencion', 'formas_pago', 'certificaciones', 'productos', 'empresa', 'contacto_nombre', 'contacto_cargo', 'contacto_email', 'contacto_telefono', 'contacto_web']
 
     def create(self, validated_data):
         # Extraemos los productos, modalidades y formas de pago
