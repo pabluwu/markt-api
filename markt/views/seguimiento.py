@@ -145,11 +145,15 @@ class SeguimientoViewSet(viewsets.ViewSet):
             name = getattr(seguido_obj, "name", None) or getattr(seguido_obj, "nombre_fantasia", None) or str(seguido_obj)
             username = getattr(seguido_obj, "username", None)
             
-            if isinstance(seguido_obj, User):  # Si es un usuario
-                imagen_perfil = getattr(seguido_obj.userprofile, "imagen_perfil", None)
-                if imagen_perfil:
-                    imagen_perfil = imagen_perfil.url
-                else: 
+            if isinstance(seguido_obj, User):
+                userprofile = getattr(seguido_obj, "userprofile", None)
+                if userprofile:
+                    imagen_perfil = getattr(userprofile, "imagen_perfil", None)
+                    if imagen_perfil:
+                        imagen_perfil = imagen_perfil.url
+                    else:
+                        imagen_perfil = None
+                else:
                     imagen_perfil = None
             elif isinstance(seguido_obj, Empresa):  # Si es una empresa
                 imagen_perfil = getattr(seguido_obj, "imagen_perfil", None)
