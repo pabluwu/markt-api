@@ -8,6 +8,9 @@ from .views.seguimiento import SeguimientoViewSet
 from .views.comment import CommentViewSet
 from .views.servicio import ServicioViewSet
 from .views.conexion import ConexionViewSet
+from .views.global_search import GlobalSearchAPIView
+
+from django.urls import path
 
 router = DefaultRouter()
 router.register(r'usuario', UsuarioViewSet, basename='usuario')
@@ -20,4 +23,7 @@ router.register(r'comments', CommentViewSet, basename='comment')
 router.register(r'servicios', ServicioViewSet, basename='servicio')
 router.register(r'conexion', ConexionViewSet, basename='conexion')
 
-urlpatterns = router.urls
+
+urlpatterns = router.urls + [
+    path('search/', GlobalSearchAPIView.as_view(), name='global-search'),
+]

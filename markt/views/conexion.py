@@ -196,7 +196,7 @@ class ConexionViewSet(viewsets.ViewSet):
                 imagen_perfil = None  # Si no es ni un usuario ni una empresa, no tiene imagen
 
             result.append({
-                "id": seg.seguidor_object_id,
+                "id": seg.id,
                 "type": seg.seguidor_content_type.model,
                 "name": name,
                 "username": username,  # Puede ser None si no existe
@@ -220,10 +220,11 @@ class ConexionViewSet(viewsets.ViewSet):
         """
         conexion_id = request.data.get("id")
         nuevo_estado = request.data.get("estado")
-
+        print('entra a actualizar estadi')
         if conexion_id is None or nuevo_estado is None:
             return Response({"error": "Se requiere 'id' y 'estado'."}, status=status.HTTP_400_BAD_REQUEST)
 
+        print(conexion_id, nuevo_estado)
         try:
             conexion = Conexion.objects.get(id=conexion_id)
         except Conexion.DoesNotExist:
