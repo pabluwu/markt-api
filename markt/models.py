@@ -205,3 +205,31 @@ class Conexion(models.Model):
 
     def __str__(self):
         return f"{self.seguidor} conectó con {self.seguido}"
+
+class ContactoServicio(models.Model):
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, related_name="contactos")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contactos_servicio")
+
+    nombre = models.CharField(max_length=255)
+    telefono = models.CharField(max_length=20)
+    email = models.EmailField()
+    mensaje = models.TextField(blank=True, null=True)
+
+    fecha_contacto = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Contacto de {self.nombre} para {self.servicio}"
+    
+class Noticias(models.Model):
+    titulo = models.CharField(max_length=500)
+    url = models.URLField(max_length=500)
+    url_original = models.URLField(max_length=500, blank=True, null=True)
+    medio = models.CharField(max_length=255)
+    fecha = models.DateField(blank=True, null=True)
+    contenido = models.TextField()
+    informe_id = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)  # opcional, para saber cuándo se guardó
+
+    def __str__(self):
+        return self.titulo

@@ -9,6 +9,8 @@ from .views.comment import CommentViewSet
 from .views.servicio import ServicioViewSet
 from .views.conexion import ConexionViewSet
 from .views.global_search import GlobalSearchAPIView
+from .views.contacto_servicio import ContactoServicioViewSet
+from .views.noticia import NoticiaViewSet
 
 from django.urls import path
 
@@ -22,6 +24,8 @@ router.register(r'seguir', SeguimientoViewSet, basename='seguimiento')
 router.register(r'comments', CommentViewSet, basename='comment')
 router.register(r'servicios', ServicioViewSet, basename='servicio')
 router.register(r'conexion', ConexionViewSet, basename='conexion')
+router.register(r'contacto_servicio', ContactoServicioViewSet, basename='contacto_servicio')
+router.register(r'noticias', NoticiaViewSet, basename='noticia')
 
 
 urlpatterns = router.urls + [

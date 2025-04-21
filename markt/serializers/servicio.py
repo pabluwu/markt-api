@@ -84,3 +84,30 @@ class ServicioSerializer(serializers.ModelSerializer):
             producto.delete()
 
         return instance
+
+class EmpresaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Empresa
+        fields = ['id', 'nombre_empresa', 'nombre_fantasia', 'rut', 'activa', 'imagen_perfil']
+        
+class ServicioDetalleSerializer(serializers.ModelSerializer):
+    empresa = EmpresaSerializer()
+    productos = ProductoServicioSerializer(many=True)
+
+    class Meta:
+        model = Servicio
+        fields = [
+            'id',
+            'descripcion',
+            'tiempo_entrega',
+            'certificaciones',
+            'contacto_nombre',
+            'contacto_cargo',
+            'contacto_email',
+            'contacto_telefono',
+            'contacto_web',
+            'modalidades_atencion',
+            'formas_pago',
+            'empresa',
+            'productos'
+        ]

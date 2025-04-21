@@ -1,8 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 from ..models import Servicio, ProductoServicio
-from ..serializers.servicio import ServicioSerializer
+from ..serializers.servicio import ServicioSerializer, ServicioDetalleSerializer
+from ..serializers.contacto_servicio import ContactoServicioSerializer
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
@@ -43,4 +45,30 @@ class ServicioViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
+            
+    @action(detail=False, methods=['get'], url_path='detalle-servicio')
+    def detalle_servicio(self, request):
+        servicio_id = request.query_params.get('servicio_id', None)
+        
+        if not servicio_id:
+            return Response({"error": "Debe proporcionar el parámetro 'servicio_id'"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            servicio = Servicio.objects.get(id=servicio_id)
+        except Servicio.DoesNotExist:
+            return Response({"error": "Servicio no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ServicioDetalleSerializer(servicio)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=["get"])
+    def contactos(self, request, pk=None):
+        print('test')
+        servicio = self.get_object()  # obtiene el Servicio específico
+
+        contactos = servicio.contactos.all()  # gracias al related_name
+
+        serializer = ContactoServicioSerializer(contactos, many=True)
+
+        return Response(serializer.data)
         
