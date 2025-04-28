@@ -1,0 +1,36 @@
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from ..models import Licitacion
+from ..serializers.licitacion import LicitacionSerializer, LicitacionDetalleSerializer
+
+class LicitacionViewSet(viewsets.ModelViewSet):
+    queryset = Licitacion.objects.all()
+    serializer_class = LicitacionSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Obtener el parámetro 'empresa_id' de los query params
+        empresa_id = self.request.query_params.get('empresa_id', None)
+        
+        if empresa_id is not None:
+            # Filtramos los servicios por la empresa
+            queryset = queryset.filter(empresa_id=empresa_id)
+        
+        return queryset
+    
+    @action(detail=False, methods=['get'], url_path='detalle-licitacion')
+    def detalle_licitacion(self, request):
+        licitacion_id = request.query_params.get('licitacion_id', None)
+        
+        if not licitacion_id:
+            return Response({"error": "Debe proporcionar el parámetro 'licitacion_id'"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            servicio = Licitacion.objects.get(id=licitacion_id)
+        except Licitacion.DoesNotExist:
+            return Response({"error": "Servicio no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = LicitacionDetalleSerializer(servicio)
+        return Response(serializer.data)

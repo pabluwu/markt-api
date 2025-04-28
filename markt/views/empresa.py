@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import status
 from ..serializers.empresa import EmpresaSerializer
 from ..models import Empresa
 
@@ -45,4 +46,23 @@ class EmpresaViewSet(ModelViewSet):
             print(e)
             return Response({"error": "No se pudo actualizar la empresa."}, status=400)
         return Response({"error": "No se pudo actualizar la empresa."}, status=400)
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            # Crear la empresa SIN el campo usuarios (porque no viene en request.data)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            empresa = serializer.save()  # Guarda la empresa
+
+            # Ahora agregamos el usuario autenticado al ManyToMany usuarios
+            empresa.usuarios.add(request.user)
+            empresa.save()
+
+            # Respondemos con la empresa creada
+            return Response(self.get_serializer(empresa).data, status=200)
+
+        except Exception as e:
+            print(e)
+            return Response({"error": "No se pudo crear la empresa."}, status=status.HTTP_400_BAD_REQUEST)
+
 

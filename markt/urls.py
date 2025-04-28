@@ -11,6 +11,8 @@ from .views.conexion import ConexionViewSet
 from .views.global_search import GlobalSearchAPIView
 from .views.contacto_servicio import ContactoServicioViewSet
 from .views.noticia import NoticiaViewSet
+from .views.licitacion import LicitacionViewSet
+from .views.servicio_licitacion import ServicioLicitacionViewSet
 
 from django.urls import path
 
@@ -26,6 +28,8 @@ router.register(r'servicios', ServicioViewSet, basename='servicio')
 router.register(r'conexion', ConexionViewSet, basename='conexion')
 router.register(r'contacto_servicio', ContactoServicioViewSet, basename='contacto_servicio')
 router.register(r'noticias', NoticiaViewSet, basename='noticia')
+router.register(r'licitacion', LicitacionViewSet, basename='licitacion')
+router.register(r'servicio_licitacion', ServicioLicitacionViewSet, basename='servicio_licitacion')
 
 
 urlpatterns = router.urls + [

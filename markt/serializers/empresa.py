@@ -3,6 +3,7 @@ from ..models import Empresa
 
 class EmpresaSerializer(serializers.ModelSerializer):
     imagen_perfil = serializers.ImageField(required=False)
+    usuarios = serializers.PrimaryKeyRelatedField(many=True, read_only=True) 
     class Meta:
         model = Empresa
         fields = '__all__'
