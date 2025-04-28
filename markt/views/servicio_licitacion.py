@@ -19,7 +19,7 @@ class ServicioLicitacionViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             print(request.data)
-            serializer = self.get_serializer(data=request.data)
+            serializer = ServicioSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             servicio = serializer.save()
 
