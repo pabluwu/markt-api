@@ -248,7 +248,12 @@ class Licitacion(models.Model):
         ('cerrada', 'Cerrada'),
         ('cancelada', 'Cancelada')
     ], default='abierta')
+class ArchivoLicitacion(models.Model):
+    licitacion = models.ForeignKey(Licitacion, on_delete=models.CASCADE, related_name="archivos_licitacion")
+    archivo = models.FileField(upload_to="archivos_licitacion/")
 
+    def __str__(self):
+        return self.archivo.name
 class OfertaLicitacion(models.Model):
     licitacion = models.ForeignKey(Licitacion, on_delete=models.CASCADE, related_name='ofertas')
     empresa_ofertante = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='ofertas_realizadas')

@@ -1,12 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from ..models import Licitacion
-from ..serializers.licitacion import LicitacionSerializer, LicitacionDetalleSerializer
+from ..serializers.licitacion import LicitacionSerializer, LicitacionDetalleSerializer, ArchivoLicitacionSerializer
 
 class LicitacionViewSet(viewsets.ModelViewSet):
     queryset = Licitacion.objects.all()
-    serializer_class = LicitacionSerializer
+    serializer_class = LicitacionDetalleSerializer
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -34,3 +35,22 @@ class LicitacionViewSet(viewsets.ModelViewSet):
         
         serializer = LicitacionDetalleSerializer(servicio)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def agregar_archivo(self, request, pk=None):
+        try:
+            licitacion = self.get_object()
+            print('\n servicio', request.data)
+            serializer = ArchivoLicitacionSerializer(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                print(e)
+                return Response({"error": "No se pudo crear la empresa."}, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                archivo = serializer.save(licitacion=licitacion)
+                return Response(ArchivoLicitacionSerializer(archivo).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print('\n',e)
+            return Response({"error": "No se pudo crear la empresa."}, status=status.HTTP_400_BAD_REQUEST)

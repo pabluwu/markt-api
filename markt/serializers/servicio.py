@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Servicio, ProductoServicio, Region, FormaPago, ModalidadAtencion, Empresa
+from ..models import Servicio, ProductoServicio, Region, FormaPago, ModalidadAtencion, Empresa, ArchivoAdjunto
 
 # Serializador para los productos del servicio
 class ProductoServicioSerializer(serializers.ModelSerializer):
@@ -90,9 +90,14 @@ class EmpresaSerializer(serializers.ModelSerializer):
         model = Empresa
         fields = ['id', 'nombre_empresa', 'nombre_fantasia', 'rut', 'activa', 'imagen_perfil']
         
+class ArchivoAdjuntoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArchivoAdjunto
+        fields = ['id', 'archivo']
 class ServicioDetalleSerializer(serializers.ModelSerializer):
     empresa = EmpresaSerializer()
     productos = ProductoServicioSerializer(many=True)
+    archivos = ArchivoAdjuntoSerializer(many=True, source='archivos_adjuntos') 
 
     class Meta:
         model = Servicio
@@ -109,5 +114,6 @@ class ServicioDetalleSerializer(serializers.ModelSerializer):
             'modalidades_atencion',
             'formas_pago',
             'empresa',
-            'productos'
+            'productos',
+            'archivos'
         ]

@@ -2,13 +2,15 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser
 from ..models import Servicio, ProductoServicio
 from ..serializers.servicio import ServicioSerializer, ServicioDetalleSerializer
 from ..serializers.contacto_servicio import ContactoServicioSerializer
+from ..serializers.archivo_servicio import ArchivoAdjuntoSerializer
 
 class ServicioViewSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
-    serializer_class = ServicioSerializer
+    serializer_class = ServicioDetalleSerializer
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -58,7 +60,7 @@ class ServicioViewSet(viewsets.ModelViewSet):
         except Servicio.DoesNotExist:
             return Response({"error": "Servicio no encontrado"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = ServicioDetalleSerializer(servicio)
+        serializer = ServicioDetalleSerializer(servicio,context={'request': request})
         return Response(serializer.data)
     
     @action(detail=True, methods=["get"])
@@ -71,4 +73,22 @@ class ServicioViewSet(viewsets.ModelViewSet):
         serializer = ContactoServicioSerializer(contactos, many=True)
 
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def agregar_archivo(self, request, pk=None):
+        try:
+            servicio = self.get_object()
+            print('\n servicio', request.data)
+            serializer = ArchivoAdjuntoSerializer(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                print(e)
+            if serializer.is_valid():
+                archivo = serializer.save(servicio=servicio)
+                return Response(ArchivoAdjuntoSerializer(archivo).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print('\n',e)
+            
         
