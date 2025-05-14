@@ -264,3 +264,18 @@ class OfertaLicitacion(models.Model):
 
     class Meta:
         unique_together = ('licitacion', 'empresa_ofertante', 'servicio_ofertado')
+        
+class CargoEmpresa(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cargo_empresa")
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="cargos_pendientes")
+    cargo = models.CharField(max_length=255)
+    is_valido = models.BooleanField(default=False)  # False hasta que la empresa lo confirme
+    fecha_postulacion = models.DateTimeField(auto_now_add=True)
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user',)  # Solo un cargo activo por usuario
+
+    def __str__(self):
+        estado = "Confirmado" if self.is_valido else "Pendiente"
+        return f"{self.user.username} postuló como '{self.cargo}' en {self.empresa.nombre_fantasia} ({estado})"

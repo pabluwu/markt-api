@@ -75,11 +75,11 @@ class LikeViewSet(viewsets.ViewSet):
         # Verificar si ya existe un like
         like_exists = Like.objects.filter(post=post, liker_type=content_type, liker_id=liker.id).exists()
 
-        print(like_type)
-        print(liker_id)
+        # print(like_type)
+        # print(liker_id)
         if like_exists:
-            print('return exists')
+            # print('return exists')
             return Response({"liked": 1}, status=status.HTTP_200_OK)
         else:
-            print('return not exists')
+            # print('return not exists')
             return Response({"liked": 0}, status=status.HTTP_200_OK)

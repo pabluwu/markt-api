@@ -171,3 +171,59 @@ class SeguimientoViewSet(viewsets.ViewSet):
             })
 
         return Response(result, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def seguidores(self, request):
+        """
+        Obtiene la lista de seguidores de una entidad (usuario o empresa).
+
+        Query Params:
+        - `id_seguido` (requerido): ID del objeto seguido.
+        - `type_seguido` (requerido): Tipo del seguido: "user" o "empresa"
+
+        Ejemplo:
+        /api/seguimiento/seguidores/?id_seguido=5&type_seguido=user
+        """
+        id_seguido = request.query_params.get("id_seguido")
+        type_seguido = request.query_params.get("type_seguido")
+
+        if not id_seguido or not type_seguido:
+            return Response({"error": "Se requieren los parámetros id_seguido y type_seguido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obtener ContentType del seguido
+        try:
+            seguido_content_type = ContentType.objects.get(model=type_seguido.lower())
+        except ContentType.DoesNotExist:
+            return Response({"error": "Tipo de seguido inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Buscar seguimientos donde esta entidad es seguida
+        seguimientos = Seguimiento.objects.filter(
+            seguido_content_type=seguido_content_type,
+            seguido_object_id=id_seguido
+        )
+
+        result = []
+        for seg in seguimientos:
+            seguidor_obj = seg.seguidor  # Obtener el objeto seguidor
+
+            # Determinar nombre, username e imagen
+            name = getattr(seguidor_obj, "name", None) or getattr(seguidor_obj, "nombre_fantasia", None) or str(seguidor_obj)
+            username = getattr(seguidor_obj, "username", None)
+
+            if isinstance(seguidor_obj, User):
+                userprofile = getattr(seguidor_obj, "userprofile", None)
+                imagen_perfil = userprofile.imagen_perfil.url if userprofile and userprofile.imagen_perfil else None
+            elif isinstance(seguidor_obj, Empresa):
+                imagen_perfil = seguidor_obj.imagen_perfil.url if seguidor_obj.imagen_perfil else None
+            else:
+                imagen_perfil = None
+
+            result.append({
+                "id": seg.seguidor_object_id,
+                "type": seg.seguidor_content_type.model,
+                "name": name,
+                "username": username,
+                "imagen_perfil": imagen_perfil
+            })
+
+        return Response(result, status=status.HTTP_200_OK)

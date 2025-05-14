@@ -13,6 +13,7 @@ from .views.contacto_servicio import ContactoServicioViewSet
 from .views.noticia import NoticiaViewSet
 from .views.licitacion import LicitacionViewSet
 from .views.servicio_licitacion import ServicioLicitacionViewSet
+from .views.cargo_empresa import CargoEmpresaViewSet
 
 from django.urls import path
 
@@ -30,6 +31,7 @@ router.register(r'contacto_servicio', ContactoServicioViewSet, basename='contact
 router.register(r'noticias', NoticiaViewSet, basename='noticia')
 router.register(r'licitacion', LicitacionViewSet, basename='licitacion')
 router.register(r'servicio_licitacion', ServicioLicitacionViewSet, basename='servicio_licitacion')
+router.register(r'cargo_empresa', CargoEmpresaViewSet, basename='cargo_empresa')
 
 
 urlpatterns = router.urls + [

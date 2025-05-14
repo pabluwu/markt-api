@@ -81,33 +81,6 @@ class ConexionViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def conectados(self, request):
-        """
-        Obtiene la lista de entidades que un usuario sigue.
-        - Si se proporciona `id_seguidor`, obtiene los seguidos de ese usuario.
-        - Si no se proporciona, usa el usuario autenticado.
-
-        Query Params:
-        - `id_seguidor` (opcional): ID del usuario del que se quieren ver los seguidos.
-
-        Ejemplo de llamada:
-        - `/api/seguimiento/seguidos/?id_conectado=5`
-
-        Respuesta:
-        ```json
-        [
-            {
-                "id": 2,
-                "type": "empresa",
-                "name": "Nombre de la Empresa"
-            },
-            {
-                "id": 3,
-                "type": "user",
-                "name": "Nombre de Usuario"
-            }
-        ]
-        ```
-        """
         id_seguidor = request.query_params.get("id_conectado")
 
         # Si no se proporciona id_seguidor, usamos el usuario autenticado
@@ -127,7 +100,7 @@ class ConexionViewSet(viewsets.ViewSet):
             seguidor_content_type=seguidor_content_type,
             seguidor_object_id=usuario.id
         )
-
+        print(seguimientos)
         result = []
         for seg in seguimientos:
             seguido_obj = seg.seguido  # Obtener el objeto seguido
@@ -156,6 +129,10 @@ class ConexionViewSet(viewsets.ViewSet):
                 "name": name,
                 "username": username,  # Puede ser None si no existe
                 "imagen_perfil": imagen_perfil,  # Agregar la imagen de perfil
+                "detalle_conexion": seg.detalle_conexion,
+                "estado": seg.estado,
+                "fecha_seguimiento":seg.fecha_seguimiento
+                
             })
 
         return Response(result, status=status.HTTP_200_OK)
