@@ -18,6 +18,8 @@ class UserProfile(models.Model):
 class Empresa(models.Model):
     rut = models.CharField(max_length=12, unique=True)  # Ejemplo: "12.345.678-9"
     nombre_empresa = models.CharField(max_length=50)
+    # giro = models.CharField(max_length=255)
+    # rubro = models.CharField(max_length=255)
     nombre_fantasia = models.CharField(max_length=50)
     usuarios = models.ManyToManyField(User, related_name="empresas")  # Relación muchos a muchos con usuarios
     descripcion = models.TextField(blank=True, null=True)
@@ -279,3 +281,17 @@ class CargoEmpresa(models.Model):
     def __str__(self):
         estado = "Confirmado" if self.is_valido else "Pendiente"
         return f"{self.user.username} postuló como '{self.cargo}' en {self.empresa.nombre_fantasia} ({estado})"
+
+class Recurso(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField()
+    fuente = models.CharField(max_length=255, blank=True, null=True)
+    rubro = models.CharField(max_length=255, blank=True, null=True)  # antes "tematica"
+    link = models.URLField(blank=True, null=True)
+    archivo = models.FileField(upload_to='repositorio_recursos/')
+    fecha_subida = models.DateTimeField()  # no usamos auto_now_add para aceptar la fecha enviada
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recursos')
+
+    def __str__(self):
+        return self.titulo
+

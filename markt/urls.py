@@ -14,6 +14,8 @@ from .views.noticia import NoticiaViewSet
 from .views.licitacion import LicitacionViewSet
 from .views.servicio_licitacion import ServicioLicitacionViewSet
 from .views.cargo_empresa import CargoEmpresaViewSet
+from .views.recurso import RecursoViewSet
+from .permissions import IsAuthenticatedOrReadOnlyCustom
 
 from django.urls import path
 
@@ -32,8 +34,9 @@ router.register(r'noticias', NoticiaViewSet, basename='noticia')
 router.register(r'licitacion', LicitacionViewSet, basename='licitacion')
 router.register(r'servicio_licitacion', ServicioLicitacionViewSet, basename='servicio_licitacion')
 router.register(r'cargo_empresa', CargoEmpresaViewSet, basename='cargo_empresa')
+router.register(r'recursos', RecursoViewSet, basename='recurso')
 
 
 urlpatterns = router.urls + [
-    path('search/', GlobalSearchAPIView.as_view(), name='global-search'),
+    path('search/', GlobalSearchAPIView.as_view(permission_classes=[IsAuthenticatedOrReadOnlyCustom]), name='global-search'),
 ]
