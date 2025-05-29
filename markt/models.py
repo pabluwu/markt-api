@@ -26,6 +26,17 @@ class Empresa(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)  # Se guarda automáticamente al crear
     activa = models.BooleanField(default=True)
     imagen_perfil = models.ImageField(upload_to='perfil_imagenes/', null=True, blank=True)
+    razon_social = models.CharField(max_length=50, default='')
+    sector = models.CharField(max_length=50, default='')
+    rubro = models.CharField(max_length=50, default='')
+    giro = models.CharField(max_length=50, default='')
+    telefono_empresa = models.IntegerField(default=1)
+    email_empresa = models.EmailField(default='')
+    direccion_fisica = models.CharField(max_length=50, default='')
+    pais = models.CharField(max_length=50, default='')
+    region = models.CharField(max_length=50, default='')
+    comuna = models.CharField(max_length=50, default='')
+    pagina_web = models.CharField(max_length=50, default='')
 
     def __str__(self):
         return self.nombre_empresa
