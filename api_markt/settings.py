@@ -32,7 +32,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 if env.bool('SERVER', default = False):
-    hosts = ['148.113.197.145', 'localhost']
+    hosts = ['148.113.197.145', 'localhost', 'markt.cl', 'www.markt.cl']
 else:
     hosts = ['localhost', '127.0.0.1']
 
