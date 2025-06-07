@@ -1,6 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets, status
 from django.contrib.contenttypes.models import ContentType
 from ..models import Perfil, Empresa, Post
@@ -12,6 +13,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostReadSerializer
     queryset = Post.objects.all().order_by('-created_at')
     permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
     def create(self, request, *args, **kwargs):
         """Sobreescribe el método POST para asignar automáticamente el autor según el tipo de perfil activo."""
