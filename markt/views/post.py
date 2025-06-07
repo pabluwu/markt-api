@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostReadSerializer
     queryset = Post.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
 
     def create(self, request, *args, **kwargs):
@@ -52,25 +52,37 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='empresa')
     def posts_by_empresa(self, request, pk=None):
         """Obtiene los posts de una empresa según su ID."""
+        print('obtener post empresa')
         empresa = Empresa.objects.filter(id=pk).first()
-        
         if not empresa:
             return Response({"error": "Empresa no encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
         posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(Empresa), author_id=empresa.id).order_by('-created_at')
+        paginated_posts = self.paginate_queryset(posts)
+        if paginated_posts is not None:
+            serializer = PostReadSerializer(paginated_posts, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # fallback (no paginación)
         serializer = PostReadSerializer(posts, many=True)
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'], url_path='user')
     def posts_by_user(self, request, pk=None):
         """Obtiene los posts de un usuario según su ID."""
         user = User.objects.filter(id=pk).first()
-        
         if not user:
             return Response({"error": "User no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
-        posts = Post.objects.filter(author_type=ContentType.objects.get_for_model(User), author_id=user.id).order_by('-created_at')
+        posts = Post.objects.filter(
+            author_type=ContentType.objects.get_for_model(User),
+            author_id=user.id
+        ).order_by('-created_at')
+
+        paginated_posts = self.paginate_queryset(posts)
+        if paginated_posts is not None:
+            serializer = PostReadSerializer(paginated_posts, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = PostReadSerializer(posts, many=True)
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
