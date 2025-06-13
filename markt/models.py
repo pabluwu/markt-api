@@ -301,6 +301,8 @@ class Recurso(models.Model):
     link = models.URLField(blank=True, null=True)
     archivo = models.FileField(upload_to='repositorio_recursos/')
     fecha_subida = models.DateTimeField()  # no usamos auto_now_add para aceptar la fecha enviada
+    palabrasClaves = models.TextField(default="")
+    imagen = models.ImageField(upload_to='imagenes_recursos/', blank=True, null=True) 
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recursos')
 
     def __str__(self):
