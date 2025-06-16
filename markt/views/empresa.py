@@ -28,24 +28,31 @@ class EmpresaViewSet(ModelViewSet):
             return Response({"detail": "No se encontraron empresas asociadas a este usuario."}, status=404)
         
     def update(self, request, *args, **kwargs):
-        try:    
-            """Maneja PUT y PATCH correctamente con FormData"""
-            partial = kwargs.pop('partial', False)  # PATCH vs PUT
+        try:
+            partial = kwargs.pop('partial', False)
             instance = self.get_object()
             print(request.FILES)
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+            # Convertir a un dict mutable
+            data = request.data.copy()
+
+            # Eliminar imagen_perfil si no viene archivo
+            if 'imagen_perfil' not in request.FILES and 'imagen_perfil' in data:
+                data.pop('imagen_perfil')
+
+            serializer = self.get_serializer(instance, data=data, partial=partial)
             if serializer.is_valid():
                 print('valido')
                 serializer.save()
                 return Response(serializer.data)
-                return Response(serializer.errors, status=400)
             else:
                 print(serializer.errors)
-                print('mo valido')
+                return Response(serializer.errors, status=400)
         except Exception as e:
             print(e)
             return Response({"error": "No se pudo actualizar la empresa."}, status=400)
-        return Response({"error": "No se pudo actualizar la empresa."}, status=400)
+
+
     
     def create(self, request, *args, **kwargs):
         try:
