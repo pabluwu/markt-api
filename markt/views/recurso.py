@@ -7,6 +7,7 @@ import PyPDF2
 import chromadb
 import google.generativeai as genai
 import os
+from django.conf import settings
 from ..models import Recurso
 from ..serializers.recurso import RecursoSerializer
 from ..permissions import IsAuthenticatedOrReadOnlyCustom
@@ -27,6 +28,13 @@ class RecursoViewSet(viewsets.ModelViewSet):
         # Configurar ChromaDB con persistencia
         return chromadb.PersistentClient(path=chroma_dir)
 
+    def get_gemini_api_key(self):
+        """Obtiene la API key de Google Gemini solo desde variables de entorno"""
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY no está configurada como variable de entorno.")
+        return api_key
+
     def perform_create(self, serializer):
         # 1. Guardar el recurso normalmente (incluye el archivo PDF)
         instance = serializer.save(autor=self.request.user)
@@ -45,7 +53,12 @@ class RecursoViewSet(viewsets.ModelViewSet):
             texto_pdf = ""
 
         # 3. Generar embeddings con Google Gemini
-        genai.configure(api_key="AIzaSyCiQ33NtzVvddmsHQHDB3DgEXKsx3VQFxY")
+        try:
+            api_key = self.get_gemini_api_key()
+            genai.configure(api_key=api_key)
+        except ValueError as e:
+            print(f"Error configurando Gemini: {e}")
+            return
         
         # Dividir el texto en chunks si es muy largo (límite ~30,000 bytes)
         def chunk_text(text, max_bytes=30000):
@@ -170,8 +183,14 @@ class RecursoViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             # 5. Configurar Google Gemini para la consulta
-            genai.configure(api_key="AIzaSyCiQ33NtzVvddmsHQHDB3DgEXKsx3VQFxY")
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            try:
+                api_key = self.get_gemini_api_key()
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+            except ValueError as e:
+                return Response({
+                    'error': f'Error configurando Gemini: {str(e)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             # 6. Crear el prompt para la consulta
             prompt = f"""
