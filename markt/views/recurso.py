@@ -7,8 +7,7 @@ import PyPDF2
 import chromadb
 import google.generativeai as genai
 import os
-from django.conf import settings
-from ..models import Recurso
+sfrom ..models import Recurso
 from ..serializers.recurso import RecursoSerializer
 from ..permissions import IsAuthenticatedOrReadOnlyCustom
 
@@ -27,7 +26,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
         
         # Configurar ChromaDB con persistencia
         return chromadb.PersistentClient(path=chroma_dir)
-
+    
     def get_gemini_api_key(self):
         """Obtiene la API key de Google Gemini solo desde variables de entorno"""
         api_key = os.environ.get('GEMINI_API_KEY')
@@ -101,12 +100,19 @@ class RecursoViewSet(viewsets.ModelViewSet):
         vector = all_embeddings[0] if all_embeddings else []
 
         # 4. Guardar el vector en ChromaDB asociado al ID del recurso
-        client = self.get_chromadb_client()
+        embeddings       = all_embeddings
+        documents        = text_chunks
+        metadatas        = [{"recurso_id": instance.id}] * len(text_chunks)
+        ids              = [f"{instance.id}_{i}" for i in range(len(text_chunks))]
+
+        client    = self.get_chromadb_client()
         collection = client.get_or_create_collection("recursos")
+
         collection.add(
-            embeddings=[vector],
-            metadatas=[{"recurso_id": instance.id}],
-            ids=[str(instance.id)]
+            embeddings=embeddings,
+            documents=documents,    # aquí guardas cada fragmento
+            metadatas=metadatas,
+            ids=ids
         )
         
         # 5. Verificación de que se guardó correctamente en ChromaDB
@@ -139,79 +145,63 @@ class RecursoViewSet(viewsets.ModelViewSet):
         Body: {"pregunta": "¿Qué dice el documento sobre...?"}
         """
         try:
-            # 1. Obtener el recurso
             recurso = self.get_object()
-            
-            # 2. Validar que existe en ChromaDB
+
+            # 1. Validar pregunta
+            pregunta = request.data.get('pregunta')
+            if not pregunta:
+                return Response({'error': 'Se requiere una pregunta en el campo "pregunta"'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 2. Obtener cliente y colección
             client = self.get_chromadb_client()
-            
-            # Verificar si la colección existe, si no, crearla
             try:
                 collection = client.get_collection("recursos")
             except Exception:
-                # Si la colección no existe, crear una nueva
                 collection = client.create_collection("recursos")
-                print("📚 Colección 'recursos' creada automáticamente")
-            
-            # Buscar el documento en ChromaDB
-            chroma_results = collection.get(ids=[str(recurso.id)])
-            
-            if not chroma_results['ids']:
-                return Response({
-                    'error': 'El documento no está disponible para consultas. No se encontró en la base de vectores.',
-                    'detalle': 'El documento existe en la base de datos pero no tiene su vector asociado en ChromaDB. Intenta subir el documento nuevamente.'
-                }, status=status.HTTP_404_NOT_FOUND)
-            
-            # 3. Obtener la pregunta del request
-            pregunta = request.data.get('pregunta')
-            if not pregunta:
-                return Response({
-                    'error': 'Se requiere una pregunta en el campo "pregunta"'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 4. Extraer el texto del PDF para el contexto
-            pdf_path = recurso.archivo.path
-            texto_pdf = ""
-            try:
-                with open(pdf_path, "rb") as f:
-                    reader = PyPDF2.PdfReader(f)
-                    for page in reader.pages:
-                        texto_pdf += page.extract_text() or ""
-            except Exception as e:
-                return Response({
-                    'error': f'Error al leer el archivo PDF: {str(e)}'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            # 5. Configurar Google Gemini para la consulta
+
+            # 3. Generar embedding de la pregunta
             try:
                 api_key = self.get_gemini_api_key()
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
             except ValueError as e:
-                return Response({
-                    'error': f'Error configurando Gemini: {str(e)}'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            # 6. Crear el prompt para la consulta
+                print(f"Error configurando Gemini: {e}")
+                return
+            pregunta_resp = genai.embed_content(model="embedding-001", content=pregunta)
+            query_emb = pregunta_resp['embedding']
+
+            # 4. Hacer búsqueda en ChromaDB — recupera, por ejemplo, los 5 chunks más cercanos
+            chroma_results = collection.query(
+                query_embeddings=[query_emb],
+                n_results=5,  # o cuantos quieras devolver
+                where={"recurso_id": recurso.id}
+            )
+
+            # chroma_results['documents'] → [[doc1, doc2, …]]
+            context_chunks = chroma_results['documents'][0]
+            contexto = "\n\n".join(context_chunks)            # => [doc1, doc2, …]
+
+            # Ahora sí join sobre strings
+            # contexto = "\n\n".join(context_chunks)
+            # contexto = "\n\n".join(context_chunks)
+
+            # 6. Generar la respuesta con Google Gemini
+            model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""
-            Basándote únicamente en el siguiente documento, responde la pregunta de manera clara y precisa.
+            Basándote únicamente en el siguiente fragmento extraído del documento, responde la pregunta de manera clara y precisa.
             
-            DOCUMENTO:
-            {texto_pdf[:8000]}  # Limitar a 8000 caracteres para evitar límites
+            CONTEXTO:
+            {contexto}
             
             PREGUNTA: {pregunta}
             
             INSTRUCCIONES:
-            - Responde solo basándote en la información del documento
-            - Si la información no está en el documento, indícalo claramente
+            - Responde solo basándote en la información del contexto
+            - Si la información no está, indícalo claramente
             - Proporciona una respuesta estructurada y útil
-            - Si es necesario, cita partes específicas del documento
             """
-            
-            # 7. Generar la respuesta con Google Gemini
             response = model.generate_content(prompt)
-            
-            # 8. Devolver la respuesta
+
+            # 7. Retornar resultado
             return Response({
                 'recurso_id': recurso.id,
                 'titulo': recurso.titulo,
@@ -219,13 +209,10 @@ class RecursoViewSet(viewsets.ModelViewSet):
                 'respuesta': response.text,
                 'fecha_consulta': recurso.fecha_subida
             }, status=status.HTTP_200_OK)
-            
+
         except Recurso.DoesNotExist:
-            return Response({
-                'error': 'Recurso no encontrado'
-            }, status=status.HTTP_404_NOT_FOUND)
-            
+            return Response({'error': 'Recurso no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
         except Exception as e:
-            return Response({
-                'error': f'Error al procesar la consulta: {str(e)}'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print(e)
+            return Response({'error': f'Error al procesar la consulta: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
