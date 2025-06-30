@@ -7,7 +7,7 @@ import PyPDF2
 import chromadb
 import google.generativeai as genai
 import os
-sfrom ..models import Recurso
+from ..models import Recurso
 from ..serializers.recurso import RecursoSerializer
 from ..permissions import IsAuthenticatedOrReadOnlyCustom
 
@@ -30,6 +30,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
     def get_gemini_api_key(self):
         """Obtiene la API key de Google Gemini solo desde variables de entorno"""
         api_key = os.environ.get('GEMINI_API_KEY')
+        print(api_key)
         if not api_key:
             raise ValueError("GEMINI_API_KEY no está configurada como variable de entorno.")
         return api_key
@@ -146,7 +147,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
         """
         try:
             recurso = self.get_object()
-
+        
             # 1. Validar pregunta
             pregunta = request.data.get('pregunta')
             if not pregunta:
