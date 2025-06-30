@@ -22,6 +22,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
         """Obtiene el cliente de ChromaDB con configuración persistente"""
         # Crear directorio para ChromaDB si no existe
         chroma_dir = os.path.join(os.getcwd(), 'chroma_db')
+        print(chroma_dir)
         os.makedirs(chroma_dir, exist_ok=True)
         
         # Configurar ChromaDB con persistencia
@@ -116,10 +117,12 @@ class RecursoViewSet(viewsets.ModelViewSet):
             ids=ids
         )
         
+        # client.persist()
+        
         # 5. Verificación de que se guardó correctamente en ChromaDB
         try:
-            # Verificar que el documento existe en ChromaDB
-            verification = collection.get(ids=[str(instance.id)])
+            # Verificar que el documento existe en ChromaDBz
+            verification = collection.get(ids=ids)
             
             if verification['ids']:
                 print(f"✅ VERIFICACIÓN EXITOSA:")
@@ -146,14 +149,17 @@ class RecursoViewSet(viewsets.ModelViewSet):
         Body: {"pregunta": "¿Qué dice el documento sobre...?"}
         """
         try:
-            recurso = self.get_object()
-        
+            try:
+                recurso = self.get_object()
+            except Exception as e:
+                print(f" No se obtuvo id  Recurso ID: {e}")
             # 1. Validar pregunta
             pregunta = request.data.get('pregunta')
             if not pregunta:
                 return Response({'error': 'Se requiere una pregunta en el campo "pregunta"'}, status=status.HTTP_400_BAD_REQUEST)
 
             # 2. Obtener cliente y colección
+            print("obteniendo client: ========================== \n")
             client = self.get_chromadb_client()
             try:
                 collection = client.get_collection("recursos")
@@ -161,6 +167,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
                 collection = client.create_collection("recursos")
 
             # 3. Generar embedding de la pregunta
+            print("configurando Gemini: ========================== \n")
             try:
                 api_key = self.get_gemini_api_key()
                 genai.configure(api_key=api_key)
@@ -170,7 +177,8 @@ class RecursoViewSet(viewsets.ModelViewSet):
             pregunta_resp = genai.embed_content(model="embedding-001", content=pregunta)
             query_emb = pregunta_resp['embedding']
 
-            # 4. Hacer búsqueda en ChromaDB — recupera, por ejemplo, los 5 chunks más cercanos
+            # 4. Hacer búsqueda en ChromaDB — recupera, por ejemplo, los 5 chunks más cercanos]
+            print("obteniendo query chroma: ========================== \n")
             chroma_results = collection.query(
                 query_embeddings=[query_emb],
                 n_results=5,  # o cuantos quieras devolver
@@ -178,6 +186,7 @@ class RecursoViewSet(viewsets.ModelViewSet):
             )
 
             # chroma_results['documents'] → [[doc1, doc2, …]]
+            print("results query chroma: ========================== \n")
             context_chunks = chroma_results['documents'][0]
             contexto = "\n\n".join(context_chunks)            # => [doc1, doc2, …]
 
@@ -217,3 +226,4 @@ class RecursoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             return Response({'error': f'Error al procesar la consulta: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
