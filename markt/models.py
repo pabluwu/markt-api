@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -16,27 +17,32 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 class Empresa(models.Model):
-    rut = models.CharField(max_length=12, unique=True)  # Ejemplo: "12.345.678-9"
-    nombre_empresa = models.CharField(max_length=50)
+    rut = models.CharField(max_length=30, unique=True)  # Ejemplo: "12.345.678-9"
+    nombre_empresa = models.CharField(max_length=1000, null=True) 
     # giro = models.CharField(max_length=255)
     # rubro = models.CharField(max_length=255)
-    nombre_fantasia = models.CharField(max_length=50)
+    nombre_fantasia = models.CharField(max_length=1000, null=True)
     usuarios = models.ManyToManyField(User, related_name="empresas")  # Relación muchos a muchos con usuarios
     descripcion = models.TextField(blank=True, null=True)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)  # Se guarda automáticamente al crear
+    fecha_creacion = models.DateTimeField(default=timezone.now,)  # Se guarda automáticamente al crear
+    fecha_creacion_empresa = models.DateTimeField(null=True, blank=True)  # Se guarda automáticamente al crear
     activa = models.BooleanField(default=True)
     imagen_perfil = models.ImageField(upload_to='perfil_imagenes/', null=True, blank=True)
-    razon_social = models.CharField(max_length=50, default='')
-    sector = models.CharField(max_length=50, default='')
-    rubro = models.CharField(max_length=50, default='')
-    giro = models.CharField(max_length=50, default='')
-    telefono_empresa = models.IntegerField(default=1)
-    email_empresa = models.EmailField(default='')
-    direccion_fisica = models.CharField(max_length=50, default='')
-    pais = models.CharField(max_length=50, default='')
-    region = models.CharField(max_length=50, default='')
-    comuna = models.CharField(max_length=50, default='')
-    pagina_web = models.CharField(max_length=50, default='')
+    razon_social = models.CharField(max_length=1000, default='', null=True)
+    sector = models.CharField(max_length=1000, default='', null=True)
+    rubro = models.CharField(max_length=1000, default='', null=True)
+    giro = models.CharField(max_length=1000, default='', null=True)
+    telefono_empresa = models.BigIntegerField(default=1, null=True)
+    email_empresa = models.EmailField(default='', blank=True, null=True)
+    direccion_fisica = models.CharField(max_length=50, default='', null=True)
+    pais = models.CharField(max_length=1000, default='', null=True)
+    region = models.CharField(max_length=1000, default='', null=True)
+    comuna = models.CharField(max_length=1000, default='', null=True)
+    pagina_web = models.CharField(max_length=1000, default='', null=True)
+    nombre_representante_legal = models.CharField(max_length=1000, default='', null=True)
+    correo_representante_legal = models.EmailField(max_length=1000, default='', null=True)
+    telefono_representante_legal = models.BigIntegerField(blank=True, null=True)
+    logo = models.ImageField(upload_to='logos_empresas/', null=True, blank=True)
 
     def __str__(self):
         return self.nombre_empresa
