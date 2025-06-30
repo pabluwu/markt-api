@@ -3,3 +3,4 @@ env/
 static/
 media/
 **/__pycache__/
+/chroma_db
