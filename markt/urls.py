@@ -16,6 +16,7 @@ from .views.servicio_licitacion import ServicioLicitacionViewSet
 from .views.cargo_empresa import CargoEmpresaViewSet
 from .views.recurso import RecursoViewSet
 from .permissions import IsAuthenticatedOrReadOnlyCustom
+from .views.recurso_usuario import RecursoUsuariosViewSet
 
 from django.urls import path
 
@@ -35,6 +36,7 @@ router.register(r'licitacion', LicitacionViewSet, basename='licitacion')
 router.register(r'servicio_licitacion', ServicioLicitacionViewSet, basename='servicio_licitacion')
 router.register(r'cargo_empresa', CargoEmpresaViewSet, basename='cargo_empresa')
 router.register(r'recursos', RecursoViewSet, basename='recurso')
+router.register(r'recursos_usuarios', RecursoUsuariosViewSet, basename='recurso_usuarios')
 
 
 urlpatterns = router.urls + [

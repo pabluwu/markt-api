@@ -313,4 +313,22 @@ class Recurso(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+class RecursoUsuarios(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField()
+    fuente = models.CharField(max_length=255, blank=True, null=True)
+    rubro = models.CharField(max_length=255, blank=True, null=True)  # antes "tematica"
+    link = models.URLField(blank=True, null=True)
+    archivo = models.FileField(upload_to='recursos/')
+    fecha_subida = models.DateTimeField()  # no usamos auto_now_add para aceptar la fecha enviada
+    palabrasClaves = models.TextField(default="")
+    imagen = models.ImageField(upload_to='recursos_imagenes/', blank=True, null=True) 
+    
+    author_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    author_id = models.PositiveIntegerField()
+    author = GenericForeignKey('author_type', 'author_id')
+
+    def __str__(self):
+        return self.titulo
 
