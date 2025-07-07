@@ -69,6 +69,7 @@ ROOT_URLCONF = 'api_markt.urls'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://app.markt.cl",
 ]
 
 SIMPLE_JWT = {
