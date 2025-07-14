@@ -102,7 +102,7 @@ class RecursoUsuariosViewSet(viewsets.ModelViewSet):
         ids = [f"{instance.id}_{i}" for i in range(len(text_chunks))]
 
         client = self.get_chromadb_client()
-        collection = client.get_or_create_collection("recursos")
+        collection = client.get_or_create_collection("recursos_usuarios")
 
         collection.add(
             embeddings=embeddings,
@@ -131,9 +131,9 @@ class RecursoUsuariosViewSet(viewsets.ModelViewSet):
 
             client = self.get_chromadb_client()
             try:
-                collection = client.get_collection("recursos")
+                collection = client.get_collection("recursos_usuarios")
             except Exception:
-                collection = client.create_collection("recursos")
+                collection = client.create_collection("recursos_usuarios")
 
             api_key = self.get_gemini_api_key()
             genai.configure(api_key=api_key)
@@ -176,3 +176,69 @@ class RecursoUsuariosViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=False, methods=['post'], url_path='comparar')
+    def comparar_documentos(self, request):
+        try:
+            ids = request.data.get('ids', [])
+            pregunta = request.data.get('pregunta', 'Realiza una comparación entre los documentos entregados.')
+
+            if not ids or not isinstance(ids, list):
+                return Response({'error': 'Se requiere una lista de IDs de documentos'}, status=status.HTTP_400_BAD_REQUEST)
+
+            client = self.get_chromadb_client()
+            collection = client.get_collection("recursos_usuarios")
+
+            all_context_chunks = []
+            metadatas = []
+
+            for doc_id in ids:
+                try:
+                    results = collection.get(where={"recurso_id": doc_id})
+                    documentos = results.get('documents', [])
+                    if documentos:
+                        all_context_chunks.append((doc_id, documentos))
+                        metadatas.append((doc_id, results.get('metadatas', [{}])[0]))
+                except Exception as e:
+                    print(f"Error obteniendo documentos del recurso {doc_id}: {e}")
+
+            if not all_context_chunks:
+                return Response({'error': 'No se encontraron documentos para los IDs entregados'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Armamos el contexto para el prompt
+            prompt_context = ""
+            for doc_id, chunks in all_context_chunks:
+                doc_text = "\n".join(chunks[:5])  # limitar a 5 chunks por doc para evitar token overflow
+                prompt_context += f"\n\n[DOCUMENTO {doc_id}]\n{doc_text}"
+
+            # Prompt para Gemini
+            api_key = self.get_gemini_api_key()
+            genai.configure(api_key=api_key)
+
+            model = genai.GenerativeModel('gemini-1.5-flash')
+
+            prompt = f"""
+            CONTEXTO:
+            {prompt_context}
+
+            PREGUNTA:
+            {pregunta}
+
+            INSTRUCCIONES:
+            - Compara los documentos presentados.
+            - Señala similitudes, diferencias, enfoques distintos, contradicciones o coincidencias.
+            - Si falta información o no puedes determinar algo, indícalo claramente.
+            """
+
+            response = model.generate_content(prompt)
+
+            return Response({
+                'documentos_comparados': ids,
+                'pregunta': pregunta,
+                'respuesta': response.text,
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
