@@ -183,51 +183,55 @@ class RecursoUsuariosViewSet(viewsets.ModelViewSet):
             ids = request.data.get('ids', [])
             pregunta = request.data.get('pregunta', 'Realiza una comparación entre los documentos entregados.')
 
-            if not ids or not isinstance(ids, list):
-                return Response({'error': 'Se requiere una lista de IDs de documentos'}, status=status.HTTP_400_BAD_REQUEST)
+            if not ids or not isinstance(ids, list) or len(ids) < 2:
+                return Response({'error': 'Se requieren al menos dos IDs de documentos'}, status=status.HTTP_400_BAD_REQUEST)
 
             client = self.get_chromadb_client()
             collection = client.get_collection("recursos_usuarios")
 
-            all_context_chunks = []
-            metadatas = []
-
-            for doc_id in ids:
-                try:
-                    results = collection.get(where={"recurso_id": doc_id})
-                    documentos = results.get('documents', [])
-                    if documentos:
-                        all_context_chunks.append((doc_id, documentos))
-                        metadatas.append((doc_id, results.get('metadatas', [{}])[0]))
-                except Exception as e:
-                    print(f"Error obteniendo documentos del recurso {doc_id}: {e}")
-
-            if not all_context_chunks:
-                return Response({'error': 'No se encontraron documentos para los IDs entregados'}, status=status.HTTP_404_NOT_FOUND)
-
-            # Armamos el contexto para el prompt
-            prompt_context = ""
-            for doc_id, chunks in all_context_chunks:
-                doc_text = "\n".join(chunks[:5])  # limitar a 5 chunks por doc para evitar token overflow
-                prompt_context += f"\n\n[DOCUMENTO {doc_id}]\n{doc_text}"
-
-            # Prompt para Gemini
+            # Configurar Gemini y generar embedding para la pregunta
             api_key = self.get_gemini_api_key()
             genai.configure(api_key=api_key)
+            pregunta_embedding = genai.embed_content(model="embedding-001", content=pregunta)['embedding']
 
+            # Buscar los chunks más relevantes por documento
+            prompt_context = ""
+            for doc_id in ids:
+                try:
+                    results = collection.query(
+                        query_embeddings=[pregunta_embedding],
+                        n_results=3,
+                        where={"recurso_id": doc_id}
+                    )
+                    chunks = results.get('documents', [[]])[0]
+                    if chunks:
+                        prompt_context += f"\n\n[DOCUMENTO {doc_id}]\n" + "\n".join(chunks)
+                    else:
+                        prompt_context += f"\n\n[DOCUMENTO {doc_id}]\n(No se encontraron fragmentos relevantes)"
+                except Exception as e:
+                    print(f"Error consultando recurso {doc_id}: {e}")
+                    prompt_context += f"\n\n[DOCUMENTO {doc_id}]\n(Error al obtener contenido)"
+
+            # Generar respuesta con Gemini
             model = genai.GenerativeModel('gemini-1.5-flash')
 
             prompt = f"""
-            CONTEXTO:
+            Actúa como un analista experto en revisión de documentos técnicos.
+
+            Tu tarea es leer y comparar el contenido de varios documentos entregados. Usa únicamente el contenido proporcionado como CONTEXTO para responder la PREGUNTA.
+
+            ### CONTEXTO:
             {prompt_context}
 
-            PREGUNTA:
+            ### PREGUNTA:
             {pregunta}
 
-            INSTRUCCIONES:
-            - Compara los documentos presentados.
-            - Señala similitudes, diferencias, enfoques distintos, contradicciones o coincidencias.
-            - Si falta información o no puedes determinar algo, indícalo claramente.
+            ### INSTRUCCIONES:
+            - Extrae únicamente información directamente contenida en el contexto.
+            - Identifica claramente similitudes, diferencias, elementos únicos, contradicciones o vacíos de información entre los documentos.
+            - Si los documentos no contienen información suficiente para responder la pregunta, indícalo claramente.
+            - Especifica a qué documento pertenece cada información comparada usando su identificador (por ejemplo: DOCUMENTO 1, DOCUMENTO 2).
+            - Sé claro, estructurado y objetivo.
             """
 
             response = model.generate_content(prompt)
@@ -241,4 +245,5 @@ class RecursoUsuariosViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
