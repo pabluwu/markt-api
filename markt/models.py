@@ -328,6 +328,7 @@ class RecursoUsuarios(models.Model):
     author_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     author_id = models.PositiveIntegerField()
     author = GenericForeignKey('author_type', 'author_id')
+    procesado = models.BooleanField(default=False)
 
     def __str__(self):
         return self.titulo
